@@ -132,3 +132,12 @@ matrix* mat_fromarray(int length,double array[]){
     }
     return mat;
 }
+
+double* mat_toarray(matrix m){
+    double * array = (double*) malloc(sizeof(double)*m.cols);
+    for (int i = 0; i < m.cols; i++)
+    {
+        array[i] = *mat_seek(m,0,i);
+    }
+    return array;
+}

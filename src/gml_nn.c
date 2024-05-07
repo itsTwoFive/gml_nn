@@ -566,3 +566,17 @@ double single_binary_acurracy_rate(neural_net nn, double ** input, int data_size
     
     return (double)success/case_num;
 }
+
+int choose_class(double * outputs,int num_out,int target){
+    double min_dist = 10000;
+    int current_best = 0;
+    for (int i = 0; i < num_out; i++)
+    {
+        double dist = fabs(outputs[i] - target);
+        if (dist < min_dist){
+            min_dist = dist; 
+            current_best = i;
+        }
+    }
+    return current_best;
+}

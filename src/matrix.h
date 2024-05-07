@@ -32,3 +32,5 @@ double mat_column_sum(matrix m, int col);
 void mat_set_zeros(matrix m);
 
 matrix* mat_fromarray(int lenght,double array[]);
+
+double* mat_toarray(matrix m);

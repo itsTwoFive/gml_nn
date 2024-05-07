@@ -75,3 +75,5 @@ matrix* feed_forward(neural_net nn, double data[], int data_size);
 void train_network(neural_net nn, int data_length, double** data, double** results);
 
 double single_binary_acurracy_rate(neural_net nn, double ** input, int data_size,double ** expected_arr,double dist,int case_num);
+
+int choose_class(double * outputs,int num_out,int target);
