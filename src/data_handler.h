@@ -22,4 +22,6 @@ parser_result parse_data(char filename[],int num_inputs);
 
 parser_result* data_div(parser_result in, int div_size);
 
+parser_result random_trim(parser_result data,int size);
+
 void change_all_values_for(double ** data,int size_x, int size_y,float actual, float new);

@@ -294,6 +294,26 @@ parser_result* data_div(parser_result in, int div_size){
     return suffled;
 }
 
+parser_result random_trim(parser_result data,int size){
+    parser_result new_data;
+    new_data.num_case = size;
+    new_data.num_in = data.num_in;
+    new_data.num_out = data.num_out;
+
+    new_data.data_input = array_alloc(size,data.num_in);
+    new_data.data_output = array_alloc(size,data.num_out);
+
+    for (int i = 0; i < size; i++)
+    {
+        int r_index = rand() % data.num_case;
+        new_data.data_input[i] = data.data_input[r_index];
+        new_data.data_output[i] = data.data_output[r_index];
+    }
+
+    return new_data;
+    
+}
+
 void change_all_values_for(double ** data,int size_x, int size_y,float actual, float new){
     for (int i = 0; i < size_y; i++)
     {

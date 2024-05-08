@@ -68,7 +68,7 @@ void nn_weight_randf(neural_net nn);
 
 matrix * cost(neural_net nn,int data_length, double ** data, double ** results);
 
-void layer_forward(neural_net nn, layer* lay, matrix* input);
+void layer_forward(layer* lay, matrix* input);
 
 matrix* feed_forward(neural_net nn, double data[], int data_size);
 
@@ -77,3 +77,11 @@ void train_network(neural_net nn, int data_length, double** data, double** resul
 double single_binary_acurracy_rate(neural_net nn, double ** input, int data_size,double ** expected_arr,double dist,int case_num);
 
 int choose_class(double * outputs,int num_out,int target);
+
+
+
+//! COSAS DEL VISUALIZER
+
+void plot2DDataForBinary(double** data_in,double** data_out, int num_cases,int num_out);
+
+void showAreas2DPlot(neural_net nn,int num_out);

@@ -238,7 +238,7 @@ void nn_custom_err_func(neural_net *nn, double (*func)(double,double)){
 }
 
 
-void layer_forward(neural_net nn, layer* lay,matrix* input){
+void layer_forward(layer* lay,matrix* input){
     matrix * multiply_sol = mat_alloc(input->rows,lay->W->cols);
     // mat_print(*input);
     // mat_print(*lay->W);
@@ -309,11 +309,11 @@ matrix* delete_bias(matrix* mat){
 
 matrix* feed_forward(neural_net nn,double data[],int data_size){
     matrix* data_mat = input_transform(data_size,data);
-    layer_forward(nn,nn.layers[0],data_mat); //Capa 0 (Input)
+    layer_forward(nn.layers[0],data_mat); //Capa 0 (Input)
     mat_free(data_mat);
     for (int layer_it = 1; layer_it < nn.layer_count; layer_it++)
     {
-        layer_forward(nn,nn.layers[layer_it],nn.layers[layer_it-1]->out);
+        layer_forward(nn.layers[layer_it],nn.layers[layer_it-1]->out);
     }
     return delete_bias(nn.layers[nn.layer_count-1]->out);
     // return nn.layers[nn.layer_count-1]->out; // Devuelve el valor con el activo del bias
@@ -515,7 +515,6 @@ void reduced_batch_train(neural_net nn,int data_length,double** data,double** re
     {
         order[i] = rand() % data_length;
     }
-
     for (int tdata_it = 0; tdata_it < nn.batch_size; tdata_it++)
     {
         feed_forward(nn,data[order[tdata_it]],nn.layers[0]->layer_width); 
@@ -540,7 +539,6 @@ void reduced_batch_train(neural_net nn,int data_length,double** data,double** re
         mat_sumf(*lay->vW,*lay->cW,lay->vW);
         mat_subsf(*lay->W,*lay->vW,lay->W);
     } 
-
 }
 
 void train_network(neural_net nn,int data_length,double** data,double** results){
@@ -579,4 +577,82 @@ int choose_class(double * outputs,int num_out,int target){
         }
     }
     return current_best;
+}
+
+
+//! VISUALIZER ************************************************
+
+void plot2DDataForBinary(double** data_in,double** data_out, int num_cases,int num_out){
+    
+    FILE *pipe = popen("gnuplot -persist", "w"); // Abrir un pipe a Gnuplot
+
+    // Enviar comandos a Gnuplot para plotear
+    fprintf(pipe, "set title 'Input Data'\n");
+    //fprintf(pipe, "set terminal x11\n");
+    fprintf(pipe, "set terminal png\n");
+    fprintf(pipe, "set output 'plot1.png'\n");
+    fprintf(pipe, "set xrange [-4:4]\n");
+    fprintf(pipe, "set yrange [-4:4]\n");
+    fprintf(pipe, "plot '-' w circles lw 1.5");
+    for (int i = 0; i < num_out-1; i++)
+    {
+        fprintf(pipe, ", '-' w circles lw 1.5");
+    }
+    fprintf(pipe, "\n");
+     fflush(pipe);
+
+    for (int j = 0; j < num_out; j++)
+    {
+        for (int i = 0; i < num_cases; i++)
+        {
+            if (data_out[i][j] > 0.5) fprintf(pipe, "%f %f\n", data_in[i][0], data_in[i][1]);
+        }
+        fprintf(pipe,"e\n");
+        fflush(pipe);  
+    }
+
+    // Cerrar el pipe
+    pclose(pipe);
+
+}
+
+void showAreas2DPlot(neural_net nn,int num_out){
+    double step = .05;
+    
+    FILE *pipe = popen("gnuplot -persist", "w"); // Abrir un pipe a Gnuplot
+
+    fprintf(pipe, "set title 'Zones'\n");
+    // fprintf(pipe, "set terminal x11\n");
+    fprintf(pipe, "set terminal png\n");
+    fprintf(pipe, "set output 'plot2.png'\n");
+    fprintf(pipe, "plot '-' w p lw 1.5");
+    for (int i = 0; i < num_out-1; i++)
+    {
+        fprintf(pipe, ",  '-' w p lw 1.5");
+    }
+    fprintf(pipe, "\n");
+    fflush(pipe);
+
+    for (int j = 0; j < num_out; j++)
+    {
+        for (double x = -4; x < 4; x +=step)
+        {
+            for (double y = -4; y < 4; y+=step)
+            {
+                double punto[] = {x,y};
+                double * out =mat_toarray(*feed_forward(nn,punto,2));
+                if (j == choose_class(out,num_out,1))
+                {
+                    fprintf(pipe, "%f %f\n", x, y);
+                }
+                free(out);
+            }
+        }
+        fprintf(pipe,"e\n");
+        fflush(pipe);  
+    }
+
+    // Cerrar el pipe
+    pclose(pipe);
+    
 }

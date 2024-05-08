@@ -1,12 +1,12 @@
-#include "visualizer.h"
+#include "gml_nn.h"
 #include "data_handler.h"
 
 int main(void)
 {
     char * dataset = "../datasets/mnist_train.csv";
     
-    int input_count = get_number_atributes(dataset)-1;
-    parser_result pre_data = parse_data(dataset,1);
+    int input_count = 784;
+    parser_result pre_data = parse_data(dataset,input_count);
 
     double ** res_data = array_alloc(pre_data.num_case,10);
     for (int i = 0; i < pre_data.num_case; i++)
@@ -30,7 +30,7 @@ int main(void)
     parser_result train_data = div_datas[0];
     parser_result test_data  = div_datas[1];
 
-    int widths[] = {1,10};
+    int widths[] = {800,10};
 
     neural_net nn = nn_create(ACT_LRELU,2,widths,input_count);
 
@@ -40,7 +40,10 @@ int main(void)
 
     nn_set_lerning_rate(&nn,0.001);
     layer_set_act_func(nn,2,ACT_OPSIGMOID);
-    int training_it = 5000;
+    int training_it = 100;
+
+    parser_result rt_data = random_trim(test_data,40);
+
     for (int i = 0; i < training_it; i++)
     {   
         train_network(nn,train_data.num_case,train_data.data_input,train_data.data_output);
@@ -48,15 +51,16 @@ int main(void)
             // printf("Train %i: ",i);
             // matrix * act_cost = cost(nn,datas.num_case,train_data.data_input,train_data.data_output);
             // mat_print(*act_cost);
-            printf("Test:  It %i: ",i);
-            matrix * act_cost2 = cost(nn,test_data.num_case,test_data.data_input,test_data.data_output);
+            printf("Test:  It %i: \n",i);
+            matrix * act_cost2 = cost(nn,rt_data.num_case,rt_data.data_input,rt_data.data_output);
             mat_print(*act_cost2);
             // mat_free(act_cost);
             mat_free(act_cost2); 
         }
     }
 
-    printf("Acurracy: %f\n",single_binary_acurracy_rate(nn,test_data.data_input,input_count,test_data.data_output,1,test_data.num_case));
+
+    printf("Acurracy: %f\n",single_binary_acurracy_rate(nn,rt_data.data_input,input_count,rt_data.data_output,1,rt_data.num_case));
 
     return 0;
 }

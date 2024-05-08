@@ -2,9 +2,9 @@ CC = gcc
 CFLAGS = -Wall -Wextra -g
 LDFLAGS = -lm
 
-SRC = matrix.c gml_nn.c data_handler.c visualizer.c tsting.c
+SRC = matrix.c gml_nn.c data_handler.c mnisttest.c
 OBJ = $(SRC:.c=.o)
-TARGET = tsting
+TARGET = mnisttest
 
 $(TARGET): $(OBJ)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
