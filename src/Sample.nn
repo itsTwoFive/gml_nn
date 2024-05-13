@@ -1,0 +1,41 @@
+Input: 2
+Learning Rate: 0.001
+Decay Rate: 0.0
+Epsilon: 0.0001
+Batch Size: 10
+Error Function: 1
+Random Seed: 0
+
+Layer Count: 3
+Layers Width: 32, 16, 1
+
+*Layer
+    Width: 32
+    Aplha: 0.0
+    Activation Function: 1
+  -Weights
+    1,2,3,4,2,3,4
+    2,3,4,5,5,4,3
+    2,3,4,3,1,2,3
+    1,0,2,3,2,1,2
+
+*Layer
+Width: 16
+Aplha: 0.0
+Activation Function: 1
+-Weights
+1,2,3,4,2,3,4
+2,3,4,5,5,4,3
+2,3,4,3,1,2,3
+1,0,2,3,2,1,2
+
+*Layer
+Width: 1
+Aplha: 0.0
+Activation Function: 1
+-Weights
+1,2,3,4,2,3,4
+2,3,4,5,5,4,3
+2,3,4,3,1,2,3
+1,0,2,3,2,1,2
+

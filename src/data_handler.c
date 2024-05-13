@@ -110,7 +110,6 @@ double get_nextf(FILE*fp){
         }
     }
     return (double)atof(num);
-    return 0;
 }
 
 double ** array_alloc(int rows, int cols){

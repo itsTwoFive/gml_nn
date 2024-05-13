@@ -79,8 +79,13 @@ double single_binary_acurracy_rate(neural_net nn, double ** input, int data_size
 int choose_class(double * outputs,int num_out,int target);
 
 
+//! LOADER - SAVER
 
-//! COSAS DEL VISUALIZER
+void nn_save(neural_net nn, char* name);
+
+neural_net nn_load(char* filename);
+
+//! VISUALIZER
 
 void plot2DDataForBinary(double** data_in,double** data_out, int num_cases,int num_out);
 

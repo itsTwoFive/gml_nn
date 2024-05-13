@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <math.h>
 #include <time.h>
+#include <string.h>
 
 #include "gml_nn.h"
 
@@ -579,6 +580,150 @@ int choose_class(double * outputs,int num_out,int target){
     return current_best;
 }
 
+//! SAVER *****************************************************
+
+FILE * create_file(char* name){
+    char *filename = (char*) malloc(sizeof(char)* (strlen(name) + 10));
+
+    strcpy(filename,"saved/");
+    strcat(filename,name);
+    strcat(filename,".nn");
+    
+    FILE * fp = fopen(filename,"w");
+    free(filename);
+    return fp;
+}
+
+void nn_save(neural_net nn, char* name){
+    FILE *fp =create_file(name);
+
+    fprintf(fp,"Input Number: %i\n",nn.input_count);
+    fprintf(fp,"Learning Rate: %.8f\n",nn.learning_rate);
+    fprintf(fp,"Decay Rate: %.8f\n",nn.decay_rate);
+    fprintf(fp,"Epsilon: %.8f\n",nn.epsilon_rate);
+    fprintf(fp,"Batch Size: %i\n",nn.batch_size);
+    fprintf(fp,"Error Function: %i\n",nn.err_func);
+    fprintf(fp,"Random Seed: %i\n",nn.rand_seed);
+    fprintf(fp,"Number of Layers: %i\n",nn.layer_count-1);
+    fprintf(fp,"Layer Widths: ");
+
+    fprintf(fp,"%i",nn.layers[1]->layer_width);
+    for (int i = 2; i < nn.layer_count; i++)
+    {
+        fprintf(fp,", %i",nn.layers[i]->layer_width);
+    }
+    fprintf(fp,"\n\n");
+
+    for (int k = 1; k < nn.layer_count; k++)
+    {
+        layer lay = *nn.layers[k];
+        fprintf(fp,"*Layer\n");
+        fprintf(fp,"\tWidth: %i\n",lay.layer_width);
+        fprintf(fp,"\tAlpha Value: %.8f\n",lay.alpha_rate);
+        fprintf(fp,"\tActivation Function: %i\n",lay.act_func);
+        fprintf(fp,"  -Weights");
+
+        for (int i = 0; i < lay.W->rows; i++){
+            fprintf(fp,"\n\t");
+            for (int j = 0; j < lay.W->cols; j++){
+                fprintf(fp,"%.10f ",*mat_seek(*lay.W,i,j));
+            }
+        }
+    }
+    fclose(fp);
+}
+
+FILE * open_nn(char *filename){
+    FILE *fp = fopen(filename,"r");
+    if (fp == NULL){
+        char *filepath = (char*) malloc(sizeof(char)* (strlen(filename) + 10));
+        strcpy(filepath,"saved/");
+        strcat(filepath,filename);
+        strcat(filepath,".nn");
+
+        fp = fopen(filepath,"r");
+        if (fp == NULL){
+            perror("ERROR: Could not find the neural network file.\n");
+            perror("       Try writting the path or the name if its saved in 'saved' folder\n");
+            exit(1);
+        }
+    }
+    return fp;
+}
+
+double get_value(FILE * fp,char delim){
+    char c;
+    char num[100];
+    memset(num,'\0',99);
+    int count = 0;
+    while ((c = fgetc(fp)) != EOF) {
+
+        if (c == delim) {
+            return (double)atof(num);
+        }
+        else if(c == ':'){
+            memset(num,'\0',99);
+            count =0;
+        }
+        else if(c == ' ' || c== '\t'){
+
+        }
+        else{
+            num[count] = c;
+            count++;
+        }
+    }
+    return (double)atof(num);
+    
+}
+
+neural_net nn_load(char* filename){
+    FILE *fp = open_nn(filename);
+    int input_num = (int)get_value(fp,'\n');
+    double learning_rate = get_value(fp,'\n');
+    double decay_rate = get_value(fp,'\n');
+    double epsilon = get_value(fp,'\n');
+    int batch_size = (int)get_value(fp,'\n');
+    int error_function = (int)get_value(fp,'\n');
+    int random_seed = (int)get_value(fp,'\n');
+    int lay_num = (int)get_value(fp,'\n');
+    int * layer_widths = (int*)malloc(sizeof(int)*lay_num);
+    for (int i = 0; i < lay_num-1; i++)
+    {
+        layer_widths[i] = (int)get_value(fp,',');
+    }
+    layer_widths[lay_num-1] = (int)get_value(fp,'\n');
+
+    neural_net nn = nn_create(ACT_NONE,lay_num,layer_widths,input_num);
+    nn.learning_rate = learning_rate;
+    nn.decay_rate = decay_rate;
+    nn.epsilon_rate = epsilon;
+    nn.batch_size = batch_size;
+    nn.err_func = error_function;
+    nn.rand_seed = random_seed;
+    //printf("%i,%f,%f,%f,%i,%i,%i\n",nn.input_count,nn.learning_rate,nn.decay_rate,nn.epsilon_rate,nn.batch_size,nn.err_func,nn.rand_seed);
+    for (int layer_it = 1; layer_it < lay_num+1; layer_it++)
+    {
+        get_value(fp,'*');
+        get_value(fp,'\n');
+        layer lay = *nn.layers[layer_it];
+        lay.layer_width = (int)get_value(fp,'\n');
+        lay.alpha_rate = get_value(fp,'\n');
+        int act_func = (int)get_value(fp,'\n');
+        layer_set_act_func(nn,layer_it,act_func);
+        get_value(fp,'\t');
+        for (int i = 0; i < lay.W->rows; i++)
+        {
+            for (int j = 0; j < lay.W->cols; j++)
+            {
+                double value = get_value(fp,' ');
+                mat_set_number(*lay.W,i,j,value);
+            }
+        }
+    }
+    // fclose(fp);
+    return nn;
+}
 
 //! VISUALIZER ************************************************
 
@@ -651,8 +796,6 @@ void showAreas2DPlot(neural_net nn,int num_out){
         fprintf(pipe,"e\n");
         fflush(pipe);  
     }
-
     // Cerrar el pipe
     pclose(pipe);
-    
 }

@@ -103,9 +103,25 @@ void parser_test(void){
     //printf("%i, %i, %i, %f, %f",train->num_case,train->num_in,train->num_out,train->data_input[200][4],data.data_input[200][4]);
 }
 
+void save_test(void){
+    int lay_arr[] = {16,8,1};
+
+    neural_net nn = nn_create(ACT_LRELU,3,lay_arr,2);
+    nn_weight_randf(nn);
+    nn_save(nn,"luis");
+}
+
+void load_test(void){
+
+    neural_net luis2 = nn_load("luis");
+    nn_save(luis2,"luis2");
+}
+
 int main(void)
 {
     //  parser_test();
-    neural_test();
+    // neural_test();
+    save_test();
+    load_test();
     return 0;
 }
