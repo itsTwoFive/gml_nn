@@ -1,3 +1,5 @@
+// This matrix.h code version may differ from the finals version code founded in src
+
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -109,7 +111,7 @@ void mat_dot_productf(matrix m, double coeficent, matrix *result){
 
 double mat_column_sum(matrix m, int col){
     double total_sum = 0;
-    for (int i = 0; i < m.rows; i++)
+    for (int i = 0; i < m.cols; i++)
     {
         total_sum += *mat_seek(m,i,col);
     }

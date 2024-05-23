@@ -3,17 +3,14 @@
 
 int main(void)
 {
-    char * dataset = "../datasets/mnist_train.csv";
+    char * dataset = "../datasets/mnist_test.csv";
     
     int input_count = 784;
     parser_result pre_data = parse_data(dataset,input_count);
 
-    double ** res_data = array_alloc(pre_data.num_case,10);
-    for (int i = 0; i < pre_data.num_case; i++)
-    {
-        int num = (int) pre_data.data_input[i][0];
-        res_data[i][num] = 1.0;
-    }
+    int num_classes;
+
+    double ** res_data = from_integer_to_binary_classes(pre_data.data_input,pre_data.num_case,&num_classes);
     parser_result data;
 
     data.num_case = pre_data.num_case;
@@ -30,23 +27,22 @@ int main(void)
     parser_result train_data = div_datas[0];
     parser_result test_data  = div_datas[1];
 
-    // int widths[] = {100,25,10};
+    int widths[] = {800,25,10};
 
-    // neural_net nn = nn_create(ACT_LRELU,3,widths,input_count);
+    neural_net nn = nn_create(ACT_LRELU,3,widths,input_count);
 
-    // nn_weight_randf(nn);
+    nn_weight_randf(nn);
 
-    // nn_set_batch_size(&nn,10);
+    nn_set_batch_size(&nn,10);
 
-    // nn_set_lerning_rate(&nn,0.001);
-    // layer_set_act_func(nn,2,ACT_OPSIGMOID);
+    nn_set_lerning_rate(&nn,0.001);
+    layer_set_act_func(nn,2,ACT_OPSIGMOID);
 
-    neural_net nn = nn_load("MNIST");
+    // neural_net nn = nn_load("MNIST");
 
+    int training_it = 100;
 
-    int training_it = 0;
-
-    parser_result rt_data = random_trim(test_data,10000);
+    parser_result rt_data = random_trim(test_data,100);
 
     for (int i = 0; i < training_it; i++)
     {   

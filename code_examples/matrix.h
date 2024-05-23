@@ -1,3 +1,5 @@
+// This matrix.h code version may differ from the finals version code founded in src
+
 #define MIN_R -1.0f
 #define MAX_R 1.0f
 
