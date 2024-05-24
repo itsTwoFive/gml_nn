@@ -32,7 +32,7 @@ int main(void)
     // Configuramos diversos parametros
     nn_set_batch_size(&nn,20);
     nn_set_decay_rate(&nn,0.0);
-    nn_set_lerning_rate(&nn,3e-4); //! learning
+    nn_set_lerning_rate(&nn,1e-3); //! learning
 
     // Dar valor a la semilla del generador de pesos iniciales e inicializar estos pesos
     // nn_set_rand_seed(&nn,0);
@@ -43,7 +43,7 @@ int main(void)
     layer_set_act_func(nn,3,ACT_OPSIGMOID);
 
     // Entrenamos la red
-    int epoch = 1e4;
+    int epoch = 1e5;
     int print_each = 100;
     for (int i = 0; i < epoch; i++)
     {
@@ -60,7 +60,7 @@ int main(void)
         }
     }
 
-    //Podemos calcular la tasa de acierto 
+    //Podemos calcular la tasa de acierto discriminando si >0 o si <0
     double acurracy = single_binary_acurracy_rate(nn,test_data.data_input,num_input,test_data.data_output,1,test_data.num_case);
 
     printf("Acurracy: %f\n",acurracy);

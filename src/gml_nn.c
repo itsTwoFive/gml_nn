@@ -139,6 +139,13 @@ void layer_free(layer* l) {
     }
 }
 
+data *instance_new_data_space(){
+    data *dataset = (data*) malloc(sizeof(data));
+    dataset->num_cases_test = 0;
+    dataset->num_cases_train = 0;
+    return dataset;
+}
+
 neural_net nn_create(int act_func, int layer_count, int layer_widths[],int input_count){
     layer **nn_layers = malloc(sizeof(layer*)*(layer_count +1));
     nn_layers[0] = layer_alloc(input_count,input_count,ACT_NONE);
@@ -162,6 +169,9 @@ neural_net nn_create(int act_func, int layer_count, int layer_widths[],int input
     nn.batch_size = 0;
     nn.input_count = input_count;
     nn.epsilon_rate = 1e-3;
+    nn.cost_output = COUT_ONLY_CONSOLE;
+    nn.console_out = PRT_CONSOLE;
+    nn.dataset = (data*) instance_new_data_space();
     return nn;
 }
 
@@ -197,6 +207,14 @@ void nn_set_epsilon(neural_net *nn, double epsilon_value){
 
 void nn_set_batch_size(neural_net *nn, int size){
     nn->batch_size = size;
+}
+
+void nn_set_cost_output(neural_net *nn, int cost_out){
+    nn->cost_output = cost_out;
+}
+
+void nn_set_console_out(neural_net *nn, int console_out){
+    nn->console_out = console_out;
 }
 
 void layer_set_act_func(neural_net nn, int layer_pos, int act_func){
@@ -542,7 +560,7 @@ void reduced_batch_train(neural_net nn,int data_length,double** data,double** re
     } 
 }
 
-void train_network(neural_net nn,int data_length,double** data,double** results){
+void train_network_epoch(neural_net nn,int data_length,double** data,double** results){
     clean_cvalues(nn);
 
     if (nn.batch_size>0) {
@@ -551,6 +569,141 @@ void train_network(neural_net nn,int data_length,double** data,double** results)
     else{
         full_batch_train(nn,data_length,data,results);
     } 
+}
+
+
+void csv_train_network(neural_net nn, int epochs, int print_cost_each, int which_cost){
+    data *dataset = nn.dataset;
+    FILE * fp = fopen("costs.csv","w");
+    fprintf(fp,"epoch");
+    for (int i = 0; i < nn.layers[nn.layer_count-1]->layer_width; i++)
+    {
+        fprintf(fp,",train_cost%i",i);
+    }
+    for (int i = 0; i < nn.layers[nn.layer_count-1]->layer_width; i++)
+    {
+        fprintf(fp,",test_cost%i",i);
+    }
+    fprintf(fp,"\n");
+    
+    for (int i = 0; i < epochs; i++)
+    {
+        FILE * tmp = tmpfile();
+        if((i-1)%print_cost_each == 0 || i+1 == epochs || i == 0){
+            if (nn.console_out != PRT_NOCONSOLE) fprintf(tmp,"EPOCH: %i\n",i);
+            fprintf(fp,"%i",i+1);
+            if (which_cost == COST_BOTH || which_cost == COST_TRAIN){
+                matrix * act_cost = cost(nn,dataset->num_cases_train,dataset->train_input,dataset->train_output);
+                if (nn.console_out == PRT_CONSOLE){
+                    fprintf(tmp,"Train: ");
+                    mat_fprint(*act_cost,tmp);  
+                } 
+                for (int i = 0; i < act_cost->cols; i++)
+                {
+                    fprintf(fp,",%f",*mat_seek(*act_cost,0,i));
+                }
+                mat_free(act_cost);
+            }
+            if (which_cost == COST_BOTH || which_cost == COST_TEST){
+                matrix * act_cost2 = cost(nn,dataset->num_cases_test,dataset->test_input,dataset->test_output);
+                if (nn.console_out == PRT_CONSOLE){
+                    fprintf(tmp,"Test: ");
+                    mat_fprint(*act_cost2,tmp);  
+                } 
+                for (int i = 0; i < act_cost2->cols; i++)
+                {
+                    fprintf(fp,",%f",*mat_seek(*act_cost2,0,i));
+                }
+                mat_free(act_cost2); 
+            }
+            rewind(tmp);
+            char buffer[256];
+            while (fgets(buffer, sizeof(buffer), tmp) != NULL) {
+                printf("%s", buffer);
+            }
+            fclose(tmp);
+            fprintf(fp,"\n");
+        }
+        train_network_epoch(nn,dataset->num_cases_train,dataset->train_input,dataset->train_output);
+    }
+    fclose(fp);
+}
+
+void gnuplot_train_network(neural_net nn, int epochs, int print_cost_each, int which_cost){
+    
+    csv_train_network(nn,epochs,print_cost_each,which_cost);
+
+    char *datafile = "costs.csv";
+    FILE *gp = popen("gnuplot -persistent", "w");
+    if (gp == NULL) {
+        fprintf(stderr, "No se puede abrir Gnuplot.\n");
+        exit(1);
+    }
+    
+    fprintf(gp, "set datafile separator ','\n");
+    fprintf(gp, "set title 'Train vs Test Error'\n");
+    fprintf(gp, "set xlabel 'Batch'\n");
+    fprintf(gp, "set ylabel 'Cost'\n");
+    fprintf(gp, "plot '%s' using 1:2 with lines linecolor rgb 'gray' title 'Train error', '%s' using 1:3 with lines linecolor rgb 'black' title 'Test error'\n", datafile, datafile);
+    
+    pclose(gp);
+}
+
+
+void console_train_network(neural_net nn, int epochs, int print_cost_each, int which_cost){
+    data *dataset = nn.dataset;
+    for (int i = 0; i <= epochs; i++)
+    {
+        if((i-1)%print_cost_each == 0 || i == epochs || i == 0){
+            if (nn.console_out != PRT_NOCONSOLE) printf("EPOCH: %i\n",i);
+            if (which_cost == COST_BOTH || which_cost == COST_TRAIN){
+                matrix * act_cost = cost(nn,dataset->num_cases_train,dataset->train_input,dataset->train_output);
+                if (nn.console_out == PRT_CONSOLE){
+                    printf("Train: ");
+                    mat_print(*act_cost);  
+                } 
+                mat_free(act_cost);
+            }
+            if (which_cost == COST_BOTH || which_cost == COST_TEST){
+                matrix * act_cost2 = cost(nn,dataset->num_cases_test,dataset->test_input,dataset->test_output);
+                if (nn.console_out == PRT_CONSOLE){
+                    printf("Test: ");
+                    mat_print(*act_cost2);  
+                } ;
+                mat_free(act_cost2); 
+            }
+        }
+        train_network_epoch(nn,dataset->num_cases_train,dataset->train_input,dataset->train_output);
+    }
+}
+
+void train_network(neural_net nn, int epochs, int print_cost_each, int which_cost){
+    if (nn.cost_output == COUT_ONLY_CONSOLE){
+        console_train_network(nn,epochs,print_cost_each,which_cost);
+    }
+    else if (nn.cost_output == COUT_CSV){
+        csv_train_network(nn,epochs,print_cost_each,which_cost);
+    }
+    else if (nn.cost_output == COUT_GNUPLOT){
+        gnuplot_train_network(nn,epochs,print_cost_each,which_cost);
+    }
+    else{
+        perror("ERROR: Tipo de salida de la funcion de coste no valido\nPara cambiarlo use el metodo nn_set_cost_output\n");
+    }
+}
+
+void nn_set_training_data(neural_net nn, int num_cases, double ** train_input, double** train_output){
+    data *dataset = nn.dataset;
+    dataset->num_cases_train = num_cases;
+    dataset->train_input = train_input;
+    dataset->train_output = train_output;
+}
+
+void nn_set_testing_data(neural_net nn, int num_cases, double ** test_input, double** test_output){
+    data *dataset = nn.dataset;
+    dataset->num_cases_test = num_cases;
+    dataset->test_input = test_input;
+    dataset->test_output = test_output;
 }
 
 double single_binary_acurracy_rate(neural_net nn, double ** input, int data_size,double ** expected,double dist,int case_num){
@@ -727,7 +880,7 @@ neural_net nn_load(char* filename){
 
 //! VISUALIZER ************************************************
 
-void plot2DDataForBinary(double** data_in,double** data_out, int num_cases,int num_out){
+void plot_2d_data_for_binary(double** data_in,double** data_out, int num_cases,int num_out){
     
     FILE *pipe = popen("gnuplot -persist", "w"); // Abrir un pipe a Gnuplot
 
@@ -761,7 +914,7 @@ void plot2DDataForBinary(double** data_in,double** data_out, int num_cases,int n
 
 }
 
-void showAreas2DPlot(neural_net nn,int num_out){
+void show_areas_2d_plot(neural_net nn,int num_out){
     double step = .05;
     
     FILE *pipe = popen("gnuplot -persist", "w"); // Abrir un pipe a Gnuplot

@@ -27,9 +27,9 @@ int main(void)
     parser_result train_data = div_datas[0];
     parser_result test_data  = div_datas[1];
 
-    int widths[] = {800,25,10};
+    int widths[] = {800,10};
 
-    neural_net nn = nn_create(ACT_LRELU,3,widths,input_count);
+    neural_net nn = nn_create(ACT_LRELU,2,widths,input_count);
 
     nn_weight_randf(nn);
 
@@ -47,7 +47,7 @@ int main(void)
     for (int i = 0; i < training_it; i++)
     {   
         printf("Test:  It %i: \n",i);
-        train_network(nn,train_data.num_case,train_data.data_input,train_data.data_output);
+        train_network_epoch(nn,train_data.num_case,train_data.data_input,train_data.data_output);
         // if(i%25 == 0){
         //     // printf("Train %i: ",i);
         //     // matrix * act_cost = cost(nn,datas.num_case,train_data.data_input,train_data.data_output);

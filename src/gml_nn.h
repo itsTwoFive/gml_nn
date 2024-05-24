@@ -14,6 +14,19 @@
 #define ERR_SIMPDIFF 3
 #define ERR_CUSTOM 9
 
+#define PRT_CONSOLE 0
+#define PRT_NOCONSOLE 1
+#define PRT_ONLYEPOCH 2
+
+#define COUT_ONLY_CONSOLE 1
+#define COUT_GNUPLOT 2
+#define COUT_CSV 3
+
+#define COST_NONE 0
+#define COST_TRAIN 1
+#define COST_TEST 2
+#define COST_BOTH 3
+
 typedef struct {
     int layer_width;
     int act_func;
@@ -28,6 +41,15 @@ typedef struct {
 } layer;
 
 typedef struct{
+    int num_cases_train;
+    double **train_input;
+    double **train_output;
+    int num_cases_test;
+    double **test_input;
+    double **test_output;
+} data;
+
+typedef struct{
     int input_count;
     int err_func;
     double (*c_err_func)(double,double);
@@ -37,8 +59,13 @@ typedef struct{
     double epsilon_rate;
     int rand_seed;
     int batch_size;
+    int cost_output;
+    int console_out;
     layer **layers;
+    data *dataset;
 }neural_net;
+
+
 
 neural_net nn_create(int act_func, int layer_count, int layer_widths[], int input_count);
 
@@ -60,6 +87,10 @@ void layer_custom_act_func(neural_net nn, int layer_pos, double (*func)(double))
 
 void nn_set_err_func(neural_net *nn, int err_func);
 
+void nn_set_cost_output(neural_net *nn, int cost_out);
+
+void nn_set_console_out(neural_net *nn, int console_out);
+
 void nn_custom_err_func(neural_net *nn, double (*func)(double,double));
 
 void nn_set_rand_seed(neural_net *nn, int seed);
@@ -72,7 +103,13 @@ void layer_forward(layer* lay, matrix* input);
 
 matrix* feed_forward(neural_net nn, double data[], int data_size);
 
-void train_network(neural_net nn, int data_length, double** data, double** results);
+void train_network_epoch(neural_net nn, int data_length, double** data, double** results);
+
+void train_network(neural_net nn, int epochs, int print_cost_each, int which_cost);
+
+void nn_set_training_data(neural_net nn, int num_cases, double ** train_input, double** train_output);
+ 
+void nn_set_testing_data(neural_net nn, int num_cases, double ** test_input, double** test_output);
 
 double single_binary_acurracy_rate(neural_net nn, double ** input, int data_size,double ** expected_arr,double dist,int case_num);
 
@@ -87,6 +124,6 @@ neural_net nn_load(char* filename);
 
 //! VISUALIZER
 
-void plot2DDataForBinary(double** data_in,double** data_out, int num_cases,int num_out);
+void plot_2d_data_for_binary(double** data_in,double** data_out, int num_cases,int num_out);
 
-void showAreas2DPlot(neural_net nn,int num_out);
+void show_areas_2d_plot(neural_net nn,int num_out);
