@@ -85,7 +85,7 @@ double dhsqrdiff(double given, double expected){
 }
 
 double simpdiff(double given, double expected){
-    return abs(given-expected);
+    return fabs(given-expected);
 }
 
 double dsimpdiff(){
@@ -588,6 +588,61 @@ void train_network_epoch(neural_net nn,int data_length,double** data,double** re
 }
 
 
+void csv_mean_train_network(neural_net nn, int epochs, int print_cost_each, int which_cost){
+    data *dataset = nn.dataset;
+    FILE * fp = fopen("costs.csv","w");
+    fprintf(fp,"epoch");
+    fprintf(fp,",mean_train_cost");
+    fprintf(fp,",mean_test_cost");
+    fprintf(fp,"\n");
+    
+    for (int i = 0; i < epochs; i++)
+    {
+        FILE * tmp = tmpfile();
+        if((i-1)%print_cost_each == 0 || i+1 == epochs || i == 0){
+            if (nn.console_out != PRT_NOCONSOLE) fprintf(tmp,"EPOCH: %i\n",i);
+            fprintf(fp,"%i",i+1);
+            if (which_cost == COST_BOTH || which_cost == COST_TRAIN){
+                matrix * act_cost = cost(nn,dataset->num_cases_train,dataset->train_input,dataset->train_output);
+                if (nn.console_out == PRT_CONSOLE){
+                    fprintf(tmp,"Train: ");
+                    mat_fprint(*act_cost,tmp);  
+                }
+                double value = 0.0f;
+                for (int i = 0; i < act_cost->cols; i++)
+                {
+                    value += *mat_seek(*act_cost,0,i);
+                }
+                fprintf(fp,",%f",value/act_cost->cols);
+                mat_free(act_cost);
+            }
+            if (which_cost == COST_BOTH || which_cost == COST_TEST){
+                matrix * act_cost2 = cost(nn,dataset->num_cases_test,dataset->test_input,dataset->test_output);
+                if (nn.console_out == PRT_CONSOLE){
+                    fprintf(tmp,"Test: ");
+                    mat_fprint(*act_cost2,tmp);  
+                } 
+                double value = 0.0f;
+                for (int i = 0; i < act_cost2->cols; i++)
+                {
+                    value += *mat_seek(*act_cost2,0,i);
+                }
+                fprintf(fp,",%f",value/act_cost2->cols);
+                mat_free(act_cost2); 
+            }
+            rewind(tmp);
+            char buffer[256];
+            while (fgets(buffer, sizeof(buffer), tmp) != NULL) {
+                printf("%s", buffer);
+            }
+            fclose(tmp);
+            fprintf(fp,"\n");
+        }
+        train_network_epoch(nn,dataset->num_cases_train,dataset->train_input,dataset->train_output);
+    }
+    fclose(fp);
+}
+
 void csv_train_network(neural_net nn, int epochs, int print_cost_each, int which_cost){
     data *dataset = nn.dataset;
     FILE * fp = fopen("costs.csv","w");
@@ -613,7 +668,7 @@ void csv_train_network(neural_net nn, int epochs, int print_cost_each, int which
                 if (nn.console_out == PRT_CONSOLE){
                     fprintf(tmp,"Train: ");
                     mat_fprint(*act_cost,tmp);  
-                } 
+                }
                 for (int i = 0; i < act_cost->cols; i++)
                 {
                     fprintf(fp,",%f",*mat_seek(*act_cost,0,i));
@@ -646,8 +701,11 @@ void csv_train_network(neural_net nn, int epochs, int print_cost_each, int which
 }
 
 void gnuplot_train_network(neural_net nn, int epochs, int print_cost_each, int which_cost){
-    
-    csv_train_network(nn,epochs,print_cost_each,which_cost);
+    if (nn.layers[nn.layer_count-1]->layer_width > 1)
+    {
+        csv_mean_train_network(nn,epochs,print_cost_each,which_cost);
+    }
+    else csv_train_network(nn,epochs,print_cost_each,which_cost);
 
     char *datafile = "costs.csv";
     FILE *gp = popen("gnuplot -persistent", "w");
@@ -655,12 +713,25 @@ void gnuplot_train_network(neural_net nn, int epochs, int print_cost_each, int w
         fprintf(stderr, "No se puede abrir Gnuplot.\n");
         exit(1);
     }
+
     
     fprintf(gp, "set datafile separator ','\n");
-    fprintf(gp, "set title 'Train vs Test Error'\n");
-    fprintf(gp, "set xlabel 'Batch'\n");
-    fprintf(gp, "set ylabel 'Cost'\n");
-    fprintf(gp, "plot '%s' using 1:2 with lines linecolor rgb 'gray' title 'Train error', '%s' using 1:3 with lines linecolor rgb 'black' title 'Test error'\n", datafile, datafile);
+        fprintf(gp, "set xlabel 'Batch'\n");
+        fprintf(gp, "set ylabel 'Cost'\n");
+
+    if(which_cost == COST_BOTH){
+        fprintf(gp, "set title 'Train vs Test Error'\n");
+        fprintf(gp, "plot '%s' using 1:2 with lines linecolor rgb 'gray' title 'Train error', '%s' using 1:3 with lines linecolor rgb 'black' title 'Test error'\n", datafile, datafile);       
+    }
+    else if(which_cost == COST_TEST){
+        fprintf(gp, "set title 'Test Error'\n");
+        fprintf(gp, "plot '%s' using 1:2 with lines linecolor rgb 'black' title 'Test error'\n", datafile);
+    }
+    else if (which_cost == COST_TRAIN){
+        fprintf(gp, "set title 'Train Error'\n");
+        fprintf(gp, "plot '%s' using 1:2 with lines linecolor rgb 'gray' title 'Train error'\n", datafile);
+    }
+    
     
     pclose(gp);
 }

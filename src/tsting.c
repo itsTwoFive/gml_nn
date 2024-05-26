@@ -97,9 +97,9 @@ void new_train_test(void){
     parser_result train_data = div_datas[0];
     parser_result test_data  = div_datas[1];
 
-    int lay_arr[] = {16,8,1};
+    int lay_arr[] = {8,1};
 
-    neural_net nn = nn_create(ACT_RELU,3,lay_arr,num_input);
+    neural_net nn = nn_create(ACT_SOFTPLUS,2,lay_arr,num_input);
 
     layer_set_alpha(nn,1,0.0);
     layer_set_alpha(nn,2,0.0);
@@ -116,20 +116,20 @@ void new_train_test(void){
     // layer_custom_act_func(nn,2,funcion_de_prueba_act);
     // layer_custom_act_func(nn,3,funcion_de_prueba_act);
     
-    // layer_set_act_func(nn,2,ACT_OPSIGMOID);
-    layer_set_act_func(nn,3,ACT_OPSIGMOID);
+    layer_set_act_func(nn,2,ACT_OPSIGMOID);
+    // layer_set_act_func(nn,3,ACT_OPSIGMOID);
 
     nn_set_training_data(nn,train_data.num_case,train_data.data_input,train_data.data_output);
     nn_set_testing_data(nn,test_data.num_case,test_data.data_input,test_data.data_output);
     
-    int training_it = 5000;
+    int training_it = 1000000;
 
     // nn_set_console_out(&nn,PRT_ONLYEPOCH);
     nn_set_cost_output(&nn,COUT_GNUPLOT);
 
-    nn_custom_err_func(&nn,&funcion_de_prueba_err);
+    // nn_custom_err_func(&nn,&funcion_de_prueba_err);
 
-    train_network(nn,training_it,10,COST_BOTH);
+    train_network(nn,training_it,5000,COST_BOTH);
     printf("Acurracy: %f\n",single_binary_acurracy_rate(nn,test_data.data_input,num_input,test_data.data_output,0.8,test_data.num_case));
     
     nn_save(nn,"diabetesjuju");

@@ -1,6 +1,4 @@
-#include <math.h>
-#include <stdlib.h>
-#include <stdio.h>
+
 #include "matrix.h"
 
 matrix* mat_alloc(int rows, int cols){

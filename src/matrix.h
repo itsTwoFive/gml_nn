@@ -1,3 +1,7 @@
+#include <math.h>
+#include <stdlib.h>
+#include <stdio.h>
+
 #define MIN_R -1.0f
 #define MAX_R 1.0f
 
