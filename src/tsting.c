@@ -47,7 +47,7 @@ void neural_test(void){
 
     printf("Inputs = %i\n",nn.input_count);
     
-    nn_weight_randf(nn);
+    nn_weight_randf(&nn);
     
     nn_set_batch_size(&nn,30);
 
@@ -90,7 +90,7 @@ void new_train_test(void){
 
     parser_result datas = parse_data(filename,num_input);
 
-    // change_all_values_for(datas.data_output,datas.num_out,datas.num_case,0,-1);
+    change_all_values_for(datas.data_output,datas.num_out,datas.num_case,0,-1);
 
     parser_result * div_datas = data_div(datas,(int)(datas.num_case*7/10));
 
@@ -99,37 +99,37 @@ void new_train_test(void){
 
     int lay_arr[] = {8,1};
 
-    neural_net nn = nn_create(ACT_SOFTPLUS,2,lay_arr,num_input);
+    neural_net nn = nn_create(ACT_OPSIGMOID,2,lay_arr,num_input);
 
-    layer_set_alpha(nn,1,0.0);
-    layer_set_alpha(nn,2,0.0);
+    // layer_set_alpha(nn,1,0.0);
+    // layer_set_alpha(nn,2,0.0);
     
-    nn_set_rand_seed(&nn,25);
-    nn_weight_randf(nn);
+    // nn_set_rand_seed(&nn,25);
+    nn_weight_randf(&nn);
     
     nn_set_batch_size(&nn,10);
 
-    nn_set_lerning_rate(&nn,0.001);
-    // nn_set_decay_rate(&nn,0.5);
+    nn_set_lerning_rate(&nn,0.003);
+    //  nn_set_decay_rate(&nn,0.2);
     
     // layer_custom_act_func(nn,1,funcion_de_prueba_act);
     // layer_custom_act_func(nn,2,funcion_de_prueba_act);
     // layer_custom_act_func(nn,3,funcion_de_prueba_act);
     
-    layer_set_act_func(nn,2,ACT_OPSIGMOID);
+    // layer_set_act_func(nn,3,ACT_OPSIGMOID);
     // layer_set_act_func(nn,3,ACT_OPSIGMOID);
 
     nn_set_training_data(nn,train_data.num_case,train_data.data_input,train_data.data_output);
     nn_set_testing_data(nn,test_data.num_case,test_data.data_input,test_data.data_output);
     
-    int training_it = 1000000;
+    int training_it = 400;
 
     // nn_set_console_out(&nn,PRT_ONLYEPOCH);
     nn_set_cost_output(&nn,COUT_GNUPLOT);
 
     // nn_custom_err_func(&nn,&funcion_de_prueba_err);
 
-    train_network(nn,training_it,5000,COST_BOTH);
+    train_network(nn,training_it,1,COST_BOTH);
     printf("Acurracy: %f\n",single_binary_acurracy_rate(nn,test_data.data_input,num_input,test_data.data_output,0.8,test_data.num_case));
     
     nn_save(nn,"diabetesjuju");
@@ -155,32 +155,36 @@ void parser_test(void){
 }
 
 void save_test(void){
-    int lay_arr[] = {15,8,1};
+    int lay_arr[] = {3,4,2};
 
     neural_net nn = nn_create(ACT_LRELU,3,lay_arr,2);
-    nn_weight_randf(nn);
-    nn_save(nn,"luis");
+    
+    layer_set_act_func(nn,3,ACT_OPSIGMOID);
+    nn_save(nn,"nnprueba");
 }
 
 void load_test(void){
 
-    neural_net nn = nn_load("diabetesjuju");
+    neural_net nn = nn_load("diabetesjuju2");
     // layer_set_act_func(nn,3,ACT_HEAVISIDE);
+    // nn_custom_err_func(&nn,&funcion_de_prueba_err);
 
-    char filename[] = "../datasets/Diabetes.csv";
+    nn_save(nn,"diabetesjuju3");
 
-    int num_input = get_number_atributes(filename)-1;
+    // char filename[] = "../datasets/Diabetes.csv";
 
-    parser_result datas = parse_data(filename,num_input);
+    // int num_input = get_number_atributes(filename)-1;
 
-    // change_all_values_for(datas.data_output,datas.num_out,datas.num_case,0,-1);
+    // parser_result datas = parse_data(filename,num_input);
 
-    parser_result * div_datas = data_div(datas,(int)(datas.num_case*7/10));
+    // // change_all_values_for(datas.data_output,datas.num_out,datas.num_case,0,-1);
 
-    parser_result train_data = div_datas[0];
-    parser_result test_data  = div_datas[1];
+    // parser_result * div_datas = data_div(datas,(int)(datas.num_case*7/10));
 
-    printf("Acurracy: %f\n",single_binary_acurracy_rate(nn,test_data.data_input,num_input,test_data.data_output,1,test_data.num_case));
+    // parser_result train_data = div_datas[0];
+    // parser_result test_data  = div_datas[1];
+
+    // printf("Acurracy: %f\n",single_binary_acurracy_rate(nn,test_data.data_input,num_input,test_data.data_output,1,test_data.num_case));
     
 }
 

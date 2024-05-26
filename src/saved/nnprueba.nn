@@ -1,0 +1,38 @@
+# File created using gml_nn. For more info https://github.com/itsTwoFive/gml_nn
+Input Number: 2
+Learning Rate: 0.10000000
+Decay Rate: 0.00000000
+Epsilon: 0.00100000
+Batch Size: 0
+Error Function: 1
+Random Seed: 0
+Number of Layers: 3
+Layer Widths: 3, 4, 2
+
+*Layer
+	Width: 3
+	Alpha Value: 0.10000000
+	Activation Function: 5
+  -Weights
+	0.0000000000 0.0000000000 0.0000000000 
+	0.0000000000 0.0000000000 0.0000000000 
+	0.0000000000 0.0000000000 0.0000000000 
+*Layer
+	Width: 4
+	Alpha Value: 0.10000000
+	Activation Function: 5
+  -Weights
+	0.0000000000 0.0000000000 0.0000000000 0.0000000000 
+	0.0000000000 0.0000000000 0.0000000000 0.0000000000 
+	0.0000000000 0.0000000000 0.0000000000 0.0000000000 
+	0.0000000000 0.0000000000 0.0000000000 0.0000000000 
+*Layer
+	Width: 2
+	Alpha Value: 0.10000000
+	Activation Function: 4
+  -Weights
+	0.0000000000 0.0000000000 
+	0.0000000000 0.0000000000 
+	0.0000000000 0.0000000000 
+	0.0000000000 0.0000000000 
+	0.0000000000 0.0000000000 

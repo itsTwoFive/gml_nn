@@ -227,7 +227,10 @@ void nn_set_console_out(neural_net *nn, int console_out){
 }
 
 void layer_set_act_func(neural_net nn, int layer_pos, int act_func){
-    if (act_func != ACT_SIGMOID &&
+    if (act_func == ACT_CUSTOM){
+            printf("WARNING: Se esta usando como funcion de activacion una personalizada,\n\tasegurese de que ha sido establecida usando nn_custom_act_func()\n");
+    }
+    else if (act_func != ACT_SIGMOID &&
         act_func != ACT_TANH &&
         act_func != ACT_RELU &&
         act_func != ACT_OPSIGMOID &&
@@ -251,11 +254,14 @@ void layer_custom_act_func(neural_net nn, int layer_pos, double (*func)(double))
 }
 
 void nn_set_err_func(neural_net *nn, int err_func){
-    if (err_func != ERR_SQRDIFF &&
+    if (err_func == ERR_CUSTOM){
+            printf("WARNING: Se esta usando como funcion de error una personalizada,\n\tasegurese de que ha sido establecida usando nn_custom_err_func()\n");
+    }
+    else if (err_func != ERR_SQRDIFF &&
         err_func != ERR_HSQRDIFF &&
         err_func != ERR_SIMPDIFF ){
             perror("ERROR: La funcion de error no existe, si quiere usar una personalizada use nn_custom_err_func()\n");
-        }
+        } 
     else{
         nn->err_func = err_func;
     }
@@ -362,23 +368,23 @@ void nn_set_rand_seed(neural_net *nn, int seed){
     nn->rand_seed = seed;
 }
 
-void nn_weight_randf(neural_net nn){
-    if (nn.rand_seed == 0){
+void nn_weight_randf(neural_net *nn){
+    if (nn->rand_seed == 0){
         time_t t;
         time(&t);
 
         unsigned int seed = (unsigned int) t;
-        nn.rand_seed = seed;
+        nn->rand_seed = seed;
         printf("Semilla de generacion: %u\n",seed);
         srand(seed);
     }
     else{
-        srand(nn.rand_seed);
+        srand(nn->rand_seed);
     }
-    for (int layer_it = 1; layer_it < nn.layer_count; layer_it++)
+    for (int layer_it = 1; layer_it < nn->layer_count; layer_it++)
     {
         
-        mat_randf(*nn.layers[layer_it]->W);
+        mat_randf(*nn->layers[layer_it]->W);
     }
 }
 
@@ -836,7 +842,7 @@ FILE * create_file(char* name){
 
 void nn_save(neural_net nn, char* name){
     FILE *fp =create_file(name);
-
+    fprintf(fp,"# File created using gml_nn. For more info https://github.com/itsTwoFive/gml_nn\n");
     fprintf(fp,"Input Number: %i\n",nn.input_count);
     fprintf(fp,"Learning Rate: %.8f\n",nn.learning_rate);
     fprintf(fp,"Decay Rate: %.8f\n",nn.decay_rate);
@@ -869,6 +875,7 @@ void nn_save(neural_net nn, char* name){
                 fprintf(fp,"%.10f ",*mat_seek(*lay.W,i,j));
             }
         }
+        fprintf(fp,"\n");
     }
     fclose(fp);
 }
@@ -919,6 +926,16 @@ double get_value(FILE * fp,char delim){
 
 neural_net nn_load(char* filename){
     FILE *fp = open_nn(filename);
+
+    char line[256];
+    while (fgets(line, sizeof(line), fp)) {
+        if (line[0] == '#') {
+            continue;
+        }
+        fseek(fp, -strlen(line), SEEK_CUR);
+        break;
+    }
+
     int input_num = (int)get_value(fp,'\n');
     double learning_rate = get_value(fp,'\n');
     double decay_rate = get_value(fp,'\n');
@@ -939,7 +956,7 @@ neural_net nn_load(char* filename){
     nn.decay_rate = decay_rate;
     nn.epsilon_rate = epsilon;
     nn.batch_size = batch_size;
-    nn.err_func = error_function;
+    nn_set_err_func(&nn,error_function);
     nn.rand_seed = random_seed;
     //printf("%i,%f,%f,%f,%i,%i,%i\n",nn.input_count,nn.learning_rate,nn.decay_rate,nn.epsilon_rate,nn.batch_size,nn.err_func,nn.rand_seed);
     for (int layer_it = 1; layer_it < lay_num+1; layer_it++)
@@ -948,7 +965,7 @@ neural_net nn_load(char* filename){
         get_value(fp,'\n');
         layer lay = *nn.layers[layer_it];
         lay.layer_width = (int)get_value(fp,'\n');
-        lay.alpha_rate = get_value(fp,'\n');
+        layer_set_alpha(nn,layer_it,get_value(fp,'\n'));
         int act_func = (int)get_value(fp,'\n');
         layer_set_act_func(nn,layer_it,act_func);
         get_value(fp,'\t');

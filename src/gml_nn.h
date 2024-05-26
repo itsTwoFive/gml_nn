@@ -94,7 +94,7 @@ void nn_custom_err_func(neural_net *nn, double (*func)(double,double));
 
 void nn_set_rand_seed(neural_net *nn, int seed);
 
-void nn_weight_randf(neural_net nn);
+void nn_weight_randf(neural_net *nn);
 
 matrix * cost(neural_net nn,int data_length, double ** data, double ** results);
 
