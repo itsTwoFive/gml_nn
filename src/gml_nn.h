@@ -7,6 +7,7 @@
 #define ACT_OPSIGMOID 4
 #define ACT_LRELU 5
 #define ACT_SOFTPLUS 6
+#define ACT_HEAVISIDE 7
 #define ACT_CUSTOM 9
 
 #define ERR_SQRDIFF 1
@@ -64,8 +65,6 @@ typedef struct{
     layer **layers;
     data *dataset;
 }neural_net;
-
-
 
 neural_net nn_create(int act_func, int layer_count, int layer_widths[], int input_count);
 

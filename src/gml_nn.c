@@ -60,6 +60,15 @@ double dsoftplus(double x){
     return sigmoid(x);
 }
 
+double heaviside(double x){
+    if(x>0) return 1;
+    else return 0;
+}
+
+double dheaviside(){
+    return 0;
+}
+
 double sqrdiff(double given,double expected){
     return pow(given-expected,2);
 }
@@ -76,7 +85,7 @@ double dhsqrdiff(double given, double expected){
 }
 
 double simpdiff(double given, double expected){
-    return given-expected;
+    return abs(given-expected);
 }
 
 double dsimpdiff(){
@@ -100,7 +109,7 @@ layer* layer_alloc(int layer_width, int input_count, int act_func){
     new_layer->act_func = act_func;
     new_layer->layer_width = layer_width;
 
-    new_layer->alpha_rate = 0.01;
+    new_layer->alpha_rate = 0.1;
 
     new_layer->W = mat_alloc(input_count+1,layer_width);
     new_layer->oW = mat_alloc(input_count+1,layer_width);
@@ -223,7 +232,8 @@ void layer_set_act_func(neural_net nn, int layer_pos, int act_func){
         act_func != ACT_RELU &&
         act_func != ACT_OPSIGMOID &&
         act_func != ACT_LRELU &&
-        act_func != ACT_SOFTPLUS){
+        act_func != ACT_SOFTPLUS &&
+        act_func != ACT_HEAVISIDE){
             perror("ERROR: La funcion de activacion no existe, si quiere usar una personalizada use nn_custom_act_func()\n");
         }
     else{
@@ -284,6 +294,9 @@ void layer_forward(layer* lay,matrix* input){
         }
         else if(act_func==ACT_SOFTPLUS){
             act_res = softplus(value);
+        }
+        else if(act_func==ACT_HEAVISIDE){
+            act_res = heaviside(value);
         }
         else if(act_func==ACT_CUSTOM){
             act_res = lay->c_act_func(value);
@@ -406,6 +419,9 @@ double calc_act_diff(neural_net nn, layer lay, double value){
     }
     else if (lay.act_func == ACT_SOFTPLUS){
         return dsoftplus(value);
+    }
+    else if (lay.act_func == ACT_HEAVISIDE){
+        return dheaviside();
     }
     else if (lay.act_func == ACT_CUSTOM){
         return finite_diff_act(nn,lay,value);
