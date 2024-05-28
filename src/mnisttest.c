@@ -35,7 +35,7 @@ int main(void)
 
     nn_set_batch_size(&nn,10);
 
-    nn_set_lerning_rate(&nn,0.001);
+    nn_set_learning_rate(&nn,0.001);
     layer_set_act_func(nn,2,ACT_OPSIGMOID);
 
     // neural_net nn = nn_load("MNIST");

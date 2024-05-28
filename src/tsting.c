@@ -53,7 +53,7 @@ void neural_test(void){
 
     // nn_set_decay_rate(&nn,0.0);
     // printf("Decay = %f\n",nn.decay_rate);
-    nn_set_lerning_rate(&nn,0.0001);
+    nn_set_learning_rate(&nn,0.0001);
     layer_set_act_func(nn,3,ACT_OPSIGMOID);
     int training_it = 10000;
     for (int i = 0; i < training_it; i++)
@@ -89,17 +89,22 @@ void new_train_test(void){
     int num_input = get_number_atributes(filename)-1;
 
     parser_result datas = parse_data(filename,num_input);
+    for (int i = 0; i < num_input; i++)
+    {
+        minmax_normalization(datas.data_input,i,datas.num_case);
+    }
+    
 
-    change_all_values_for(datas.data_output,datas.num_out,datas.num_case,0,-1);
+    // change_all_values_for(datas.data_output,datas.num_out,datas.num_case,0,-1);
 
     parser_result * div_datas = data_div(datas,(int)(datas.num_case*7/10));
 
     parser_result train_data = div_datas[0];
     parser_result test_data  = div_datas[1];
 
-    int lay_arr[] = {8,1};
+    int lay_arr[] = {16,8,1};
 
-    neural_net nn = nn_create(ACT_OPSIGMOID,2,lay_arr,num_input);
+    neural_net nn = nn_create(ACT_SOFTPLUS,3,lay_arr,num_input);
 
     // layer_set_alpha(nn,1,0.0);
     // layer_set_alpha(nn,2,0.0);
@@ -107,10 +112,10 @@ void new_train_test(void){
     // nn_set_rand_seed(&nn,25);
     nn_weight_randf(&nn);
     
-    nn_set_batch_size(&nn,10);
+    nn_set_batch_size(&nn,40);
 
-    nn_set_lerning_rate(&nn,0.003);
-    //  nn_set_decay_rate(&nn,0.2);
+    nn_set_learning_rate(&nn,0.01);
+    //  nn_set_decay_rate(&nn,0.4f);
     
     // layer_custom_act_func(nn,1,funcion_de_prueba_act);
     // layer_custom_act_func(nn,2,funcion_de_prueba_act);
@@ -122,7 +127,7 @@ void new_train_test(void){
     nn_set_training_data(nn,train_data.num_case,train_data.data_input,train_data.data_output);
     nn_set_testing_data(nn,test_data.num_case,test_data.data_input,test_data.data_output);
     
-    int training_it = 400;
+    int training_it = 1000;
 
     // nn_set_console_out(&nn,PRT_ONLYEPOCH);
     nn_set_cost_output(&nn,COUT_GNUPLOT);
@@ -130,7 +135,7 @@ void new_train_test(void){
     // nn_custom_err_func(&nn,&funcion_de_prueba_err);
 
     train_network(nn,training_it,1,COST_BOTH);
-    printf("Acurracy: %f\n",single_binary_acurracy_rate(nn,test_data.data_input,num_input,test_data.data_output,0.8,test_data.num_case));
+    printf("Acurracy: %f\n",single_binary_acurracy_rate(nn,test_data.data_input,num_input,test_data.data_output,0.5,test_data.num_case));
     
     nn_save(nn,"diabetesjuju");
 

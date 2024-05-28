@@ -24,12 +24,12 @@ int main(void)
 
     // Configuramos diversos parametros
     nn_set_decay_rate(&nn,0.0);
-    nn_set_lerning_rate(&nn,0.001);
+    nn_set_learning_rate(&nn,0.01);
 
     // Dar valor a la semilla del generador de pesos iniciales e inicializar estos pesos
     // nn_set_rand_seed(&nn,0);
 
-    nn_weight_randf(nn);
+    nn_weight_randf(&nn);
 
     // Podemos configurar tambien distintas Funciones de activacion para cada capa
     layer_set_act_func(nn,2,ACT_OPSIGMOID);
@@ -39,10 +39,10 @@ int main(void)
     int print_each = 1000;
     for (int i = 0; i < epoch; i++)
     {
-        train_network(nn,data.num_case,data.data_input,data.data_output);
+        train_network_epoch(nn,data.num_case,data.data_input,data.data_output);
         if(i%print_each == 0){
             matrix * act_cost = cost(nn,data.num_case,data.data_input,data.data_output);
-            printf("EPOCH %i Train: ",i);
+            printf("EPOCA %i Coste de entrenamiento: ",i);
             mat_print(*act_cost);
             mat_free(act_cost);
         }
