@@ -990,7 +990,6 @@ void plot_2d_data_for_binary(double** data_in,double** data_out, int num_cases,i
 
     // Enviar comandos a Gnuplot para plotear
     fprintf(pipe, "set title 'Input Data'\n");
-    //fprintf(pipe, "set terminal x11\n");
     fprintf(pipe, "set terminal png\n");
     fprintf(pipe, "set output 'Points.png'\n");
     fprintf(pipe, "set xrange [%f:%f]\n",ranges[0],ranges[1]);
@@ -1001,18 +1000,20 @@ void plot_2d_data_for_binary(double** data_in,double** data_out, int num_cases,i
         fprintf(pipe, ", '-' w circles lw 1.5");
     }
     fprintf(pipe, "\n");
-     fflush(pipe);
 
+    
     for (int j = 0; j < num_out; j++)
     {
         for (int i = 0; i < num_cases; i++)
         {
-            if (data_out[i][j] > 0.5) fprintf(pipe, "%f %f\n", data_in[i][0], data_in[i][1]);
+            if (data_out[i][0] == j) {
+                fprintf(pipe, "%f %f\n", data_in[i][0], data_in[i][1]);
+            }
         }
         fprintf(pipe,"e\n");
-        fflush(pipe);  
     }
-
+    
+    fflush(pipe);  
     // Cerrar el pipe
     pclose(pipe);
 
@@ -1025,6 +1026,8 @@ void show_areas_2d_plot(neural_net nn,int num_out,double step,double* ranges){
     fprintf(pipe, "set title 'Zones'\n");
     fprintf(pipe, "set terminal png\n");
     fprintf(pipe, "set output 'areas.png'\n");
+    fprintf(pipe, "set xrange [%f:%f]\n",ranges[0],ranges[1]);
+    fprintf(pipe, "set yrange [%f:%f]\n",ranges[2],ranges[3]);
     fprintf(pipe, "plot '-' w p lw 1.5");
     for (int i = 0; i < num_out-1; i++)
     {
@@ -1037,7 +1040,7 @@ void show_areas_2d_plot(neural_net nn,int num_out,double step,double* ranges){
     {
         for (double x = ranges[0]; x < ranges[1]; x +=step)
         {
-            for (double y = ranges[2]; y < ranges[4]; y+=step)
+            for (double y = ranges[2]; y < ranges[3]; y+=step)
             {
                 double punto[] = {x,y};
                 double * out =mat_toarray(*feed_forward(nn,punto,2));
